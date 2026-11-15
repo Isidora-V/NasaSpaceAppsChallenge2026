@@ -1,3 +1,4 @@
+// Este archivo es un script que controla la interfaz de usuario en la web.
 'use strict';
 
 const CONFIG = {
@@ -61,7 +62,7 @@ const estado = {
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-/* ---------- Formato ---------- */
+// Formato
 
 function formatearNumero(v, dec = 1) {
   if (v === null || v === undefined || Number.isNaN(v)) return '—';
@@ -80,7 +81,7 @@ function formatearPValor(p) {
   return formatearNumero(p, 2);
 }
 
-/* ---------- Estadística ---------- */
+// Estadística
 
 function mediana(lista) {
   const ordenada = lista.slice().sort((a, b) => a - b);
@@ -138,7 +139,7 @@ function pValorMK(S, varianza) {
   return 2 * (1 - normalCDF(Math.abs(Z)));
 }
 
-// Corrección de Hamed y Rao (1998): infla la varianza de S según la autocorrelación
+// Corrección de Hamed y Rao infla la varianza de S según la autocorrelación
 // significativa de los rangos de la serie sin tendencia.
 function factorHamedRao(anios, valores, pendienteSen) {
   const n = valores.length;
@@ -222,7 +223,7 @@ function calcularEstadisticas(anios, valores) {
   };
 }
 
-/* ---------- Datos ---------- */
+// Datos
 
 function parsearCSV(texto) {
   const lineas = texto.replace(/\r\n?/g, '\n').split('\n').filter(l => l.trim() !== '');
@@ -292,7 +293,7 @@ function otraFuente(fuente) {
   return fuente === 'satelite' ? 'historico' : 'satelite';
 }
 
-/* ---------- Interfaz ---------- */
+// Interfaz
 
 function seleccionarZona(clave) {
   estado.zonaActiva = clave;
@@ -461,7 +462,7 @@ function actualizarGrafico() {
   cargador.classList.add('is-oculto');
 }
 
-/* ---------- Tema (claro / oscuro) ---------- */
+// Claro / oscuro
 
 const CLAVE_TEMA = 'lluvia-chile-tema';
 
@@ -515,7 +516,7 @@ function alternarTema() {
   actualizarContexto();
 }
 
-/* ---------- Contexto: hitos, mapa de calor y comparación ---------- */
+// Contexto: hitos, mapa de calor y comparación
 
 const TIPOS_HITO = {
   clima: { etiqueta: 'Clima', simbolo: 'circle' },
@@ -872,7 +873,7 @@ function actualizarContexto() {
   actualizarAntesDespues();
 }
 
-/* ---------- Cuestionario ---------- */
+// Cuestionario
 
 const preguntasQuiz = [
   {
@@ -980,7 +981,7 @@ function avanzarQuiz() {
   }
 }
 
-/* ---------- Inicio ---------- */
+// Inicio
 
 document.addEventListener('DOMContentLoaded', async () => {
   aplicarTema(document.documentElement.dataset.tema === 'oscuro' ? 'oscuro' : 'claro');
