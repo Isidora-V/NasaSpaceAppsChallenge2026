@@ -10,6 +10,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
 
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script>
+    (function () {
+      var tema = null;
+      try { tema = localStorage.getItem('lluvia-chile-tema'); } catch (e) {}
+      if (!tema) {
+        tema = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+      }
+      document.documentElement.dataset.tema = tema;
+    })();
+  </script>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -17,12 +27,18 @@
   <header class="cabecera">
     <div class="contenedor cabecera-fila">
       <a href="#" class="marca">Lluvia en Chile <span>Space Apps 2026</span></a>
-      <nav class="nav">
-        <a href="#explorador">Mapa</a>
-        <a href="#contexto">Contexto</a>
-        <a href="#cuestionario">Cuestionario</a>
-        <a href="#equipo">Equipo</a>
-      </nav>
+      <div class="cabecera-acciones">
+        <nav class="nav">
+          <a href="#explorador">Mapa</a>
+          <a href="#contexto">Contexto</a>
+          <a href="#cuestionario">Cuestionario</a>
+          <a href="#equipo">Equipo</a>
+        </nav>
+        <button class="tema-toggle" id="tema-toggle" type="button" aria-pressed="false" aria-label="Cambiar a modo oscuro">
+          <span class="tema-icono" aria-hidden="true"></span>
+          <span class="tema-texto">Modo oscuro</span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -127,22 +143,79 @@
       <div class="contenedor">
         <h2 class="seccion-titulo">Lo que el gráfico no muestra</h2>
         <p class="seccion-bajada">
-          Una tendencia en la lluvia no explica por sí sola lo que pasa en el territorio.
-          Estos tres factores se cruzan con ella. No los medimos en este sitio, así que los presentamos como contexto y no como causa.
+          La lluvia no cambia sola ni actúa sola. Aquí la ponemos al lado de fenómenos climáticos, eventos y leyes conocidas para entender mejor el contexto.
+          Todo usa la zona y la fuente que elegiste en el panel de arriba.
         </p>
-        <div class="contexto-lista">
-          <article>
-            <h3>Megasequía e incendios</h3>
-            <p>El déficit de lluvia en la zona central desde 2010, documentado por el CR2, reseca la vegetación y aumenta el riesgo y la severidad de los incendios forestales.</p>
-          </article>
-          <article>
-            <h3>Ciudad y suelo</h3>
-            <p>La expansión urbana hacia zonas periurbanas aumenta la demanda de agua y sella suelos que antes dejaban infiltrar la lluvia hacia los acuíferos.</p>
-          </article>
-          <article>
-            <h3>Uso productivo del agua</h3>
-            <p>La agricultura, la minería y otras actividades presionan cuencas que ya reciben menos agua, y eso pesa sobre el acceso de las comunidades.</p>
-          </article>
+
+        <div class="aviso-causalidad">
+          <p class="aviso-titulo">Correlación no implica causalidad</p>
+          <p>
+            Que dos cosas pasen al mismo tiempo no prueba que una cause la otra. Un año seco y un gran incendio pueden coincidir,
+            pero el fuego también depende del calor, el viento, la vegetación y la acción humana. Esta sección muestra coincidencias para hacer mejores preguntas, no para dar respuestas.
+          </p>
+        </div>
+
+        <div class="ctx-bloque">
+          <h3>Lluvia e hitos en el tiempo</h3>
+          <p class="ctx-sub" id="ctx-linea-sub">Cargando…</p>
+
+          <div class="hitos-filtros" role="group" aria-label="Tipo de hito">
+            <button class="hito-filtro is-activo" data-tipo="todos">Todos</button>
+            <button class="hito-filtro" data-tipo="clima"><span class="hito-simbolo simbolo-clima"></span>Clima</button>
+            <button class="hito-filtro" data-tipo="territorio"><span class="hito-simbolo simbolo-territorio"></span>Territorio</button>
+            <button class="hito-filtro" data-tipo="ley"><span class="hito-simbolo simbolo-ley"></span>Leyes</button>
+          </div>
+
+          <div id="grafico-linea-tiempo" class="ctx-grafico"></div>
+          <div class="hito-detalle" id="hito-detalle"></div>
+          <ol class="hitos-lista" id="hitos-lista"></ol>
+        </div>
+
+        <div class="ctx-bloque">
+          <h3>Mapa de calor: años secos y húmedos</h3>
+          <p class="ctx-sub">
+            Cada celda compara un año con el promedio de su propia zona. Los tonos cálidos son años más secos y los azules, más lluviosos.
+            Sirve para ver si los años secos se repiten en las tres zonas a la vez o solo en algunas.
+          </p>
+          <div id="grafico-calor" class="ctx-grafico ctx-grafico-bajo"></div>
+        </div>
+
+        <div class="ctx-bloque">
+          <h3>¿Cambió algo desde 2010?</h3>
+          <p class="ctx-sub">
+            Promedio de lluvia anual antes de 2010 y desde 2010, el año en que comenzó la megasequía en la zona central.
+          </p>
+          <div class="comparacion-zonas" id="comparacion-zonas"></div>
+          <p class="ctx-nota" id="comparacion-nota"></p>
+        </div>
+
+        <div class="ctx-bloque">
+          <h3>Trabajo futuro</h3>
+          <p class="ctx-sub">
+            Análisis que no alcanzamos a hacer en la hackatón, pero que permitirían pasar del contexto a preguntas más precisas.
+          </p>
+          <div class="futuro-grilla">
+            <article>
+              <h4>Incendios forestales</h4>
+              <p>Cruzar la superficie quemada por temporada, según CONAF, con la lluvia del invierno anterior en cada región.</p>
+            </article>
+            <article>
+              <h4>Legislación ambiental</h4>
+              <p>Estudiar si la reforma al Código de Aguas y la Ley Marco de Cambio Climático cambian cómo se reparte el agua en cuencas con déficit.</p>
+            </article>
+            <article>
+              <h4>Expansión urbana</h4>
+              <p>Medir con imágenes satelitales cuánto suelo se ha construido en zonas periurbanas y compararlo con la recarga de los acuíferos.</p>
+            </article>
+            <article>
+              <h4>Fenómenos de gran escala</h4>
+              <p>Incorporar índices de El Niño y de la Oscilación Decadal del Pacífico para separar la variación natural de la tendencia.</p>
+            </article>
+            <article>
+              <h4>Agua disponible</h4>
+              <p>Sumar caudales de ríos y nieve en la cordillera, que dependen de la lluvia pero también de la temperatura.</p>
+            </article>
+          </div>
         </div>
       </div>
     </section>

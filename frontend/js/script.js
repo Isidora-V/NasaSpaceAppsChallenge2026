@@ -304,7 +304,7 @@ function seleccionarZona(clave) {
     boton.setAttribute('aria-pressed', activa ? 'true' : 'false');
   }
 
-  document.documentElement.style.setProperty('--zona', CONFIG.zonas[clave].color);
+  document.documentElement.style.setProperty('--zona', `var(--${clave})`);
   actualizarTodo();
 }
 
@@ -319,6 +319,7 @@ function seleccionarFuente(fuente) {
 function actualizarTodo() {
   actualizarPanel();
   actualizarGrafico();
+  actualizarContexto();
 }
 
 function construirLectura(zona, fuente, s) {
@@ -370,9 +371,10 @@ function actualizarPanel() {
 function actualizarGrafico() {
   const contenedor = $('#grafico');
   const cargador = $('#grafico-loader');
-  const zona = CONFIG.zonas[estado.zonaActiva];
   const datos = datosDe(estado.zonaActiva, estado.fuente);
   const esAnomalias = estado.vista === 'anomalias';
+  const c = coloresTema();
+  const colorZona = c[estado.zonaActiva];
 
   $('.opciones-grafico').hidden = esAnomalias;
 
@@ -384,14 +386,11 @@ function actualizarGrafico() {
   }
 
   const s = datos.stats;
-  const tinta = '#1f1d1a';
-  const suave = '#6a655b';
-  const linea = '#e3ddd0';
   const trazas = [];
 
   if (esAnomalias) {
     const colores = [];
-    for (const v of s.anomalias) colores.push(v >= 0 ? CONFIG.colorAnomaliaPositiva : CONFIG.colorAnomaliaNegativa);
+    for (const v of s.anomalias) colores.push(v >= 0 ? c.centro : c.norte);
     trazas.push({
       type: 'bar',
       x: datos.anios,
@@ -408,7 +407,7 @@ function actualizarGrafico() {
         trazas.push({
           type: 'scatter', mode: 'lines',
           x: otra.anios, y: otra.valores,
-          line: { color: CONFIG.colorOtraFuente, width: 1.5 },
+          line: { color: c.otraFuente, width: 1.5 },
           name: CONFIG.fuentes[claveOtra].etiqueta,
           hovertemplate: '%{x}: %{y:,.0f} mm<extra></extra>'
         });
@@ -420,8 +419,8 @@ function actualizarGrafico() {
       mode: 'lines+markers',
       x: datos.anios,
       y: datos.valores,
-      line: { color: zona.color, width: 2 },
-      marker: { size: 5, color: zona.color },
+      line: { color: colorZona, width: 2 },
+      marker: { size: 5, color: colorZona },
       name: CONFIG.fuentes[estado.fuente].etiqueta,
       hovertemplate: '%{x}: %{y:,.0f} mm<extra></extra>'
     });
@@ -430,7 +429,7 @@ function actualizarGrafico() {
       trazas.push({
         type: 'scatter', mode: 'lines',
         x: datos.anios, y: s.mediaMovil,
-        line: { color: tinta, width: 1.5 },
+        line: { color: c.tinta, width: 1.5 },
         name: 'Media móvil 5 años', hoverinfo: 'skip'
       });
     }
@@ -438,32 +437,439 @@ function actualizarGrafico() {
       trazas.push({
         type: 'scatter', mode: 'lines',
         x: datos.anios, y: s.lineaSen,
-        line: { color: tinta, width: 1.5, dash: 'dash' },
+        line: { color: c.tinta, width: 1.5, dash: 'dash' },
         name: 'Tendencia (Sen)', hoverinfo: 'skip'
       });
     }
   }
 
-  const layout = {
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    separators: ',.',
-    font: { family: 'IBM Plex Sans, sans-serif', size: 12, color: suave },
+  const layout = Object.assign(layoutBase(c), {
     margin: { l: 56, r: 8, t: 36, b: 32 },
-    xaxis: { showgrid: false, zeroline: false, linecolor: linea, ticks: 'outside', tickcolor: linea, dtick: 5 },
+    xaxis: { showgrid: false, zeroline: false, linecolor: c.linea, ticks: 'outside', tickcolor: c.linea, dtick: 5 },
     yaxis: {
-      gridcolor: linea,
-      zeroline: esAnomalias, zerolinecolor: tinta,
+      gridcolor: c.linea,
+      zeroline: esAnomalias, zerolinecolor: c.tinta,
       rangemode: esAnomalias ? 'normal' : 'tozero',
       title: { text: esAnomalias ? 'mm sobre o bajo el promedio' : 'mm al año', font: { size: 11 } }
     },
     showlegend: !esAnomalias,
-    legend: { orientation: 'h', x: 0, y: 1.14, font: { size: 11, color: tinta } },
+    legend: { orientation: 'h', x: 0, y: 1.14, font: { size: 11, color: c.tinta } },
     bargap: 0.25
-  };
+  });
 
   Plotly.react(contenedor, trazas, layout, { responsive: true, displayModeBar: false });
   cargador.classList.add('is-oculto');
+}
+
+/* ---------- Tema (claro / oscuro) ---------- */
+
+const CLAVE_TEMA = 'lluvia-chile-tema';
+
+function leerVariable(nombre) {
+  return getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+}
+
+function coloresTema() {
+  return {
+    tinta: leerVariable('--tinta'),
+    suave: leerVariable('--tinta-suave'),
+    linea: leerVariable('--linea-grafico'),
+    papel: leerVariable('--papel'),
+    papel2: leerVariable('--papel-2'),
+    otraFuente: leerVariable('--otra-fuente'),
+    norte: leerVariable('--norte'),
+    centro: leerVariable('--centro'),
+    sur: leerVariable('--sur')
+  };
+}
+
+function layoutBase(c) {
+  return {
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    separators: ',.',
+    font: { family: 'IBM Plex Sans, sans-serif', size: 12, color: c.suave },
+    hoverlabel: {
+      bgcolor: c.papel,
+      bordercolor: c.linea,
+      font: { family: 'IBM Plex Sans, sans-serif', color: c.tinta }
+    }
+  };
+}
+
+function aplicarTema(tema) {
+  document.documentElement.dataset.tema = tema;
+  const boton = $('#tema-toggle');
+  if (!boton) return;
+  const oscuro = tema === 'oscuro';
+  boton.setAttribute('aria-pressed', oscuro ? 'true' : 'false');
+  boton.setAttribute('aria-label', oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+  boton.querySelector('.tema-texto').textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
+}
+
+function alternarTema() {
+  const nuevo = document.documentElement.dataset.tema === 'oscuro' ? 'claro' : 'oscuro';
+  aplicarTema(nuevo);
+  try { localStorage.setItem(CLAVE_TEMA, nuevo); } catch (e) { /* almacenamiento no disponible */ }
+  actualizarGrafico();
+  actualizarContexto();
+}
+
+/* ---------- Contexto: hitos, mapa de calor y comparación ---------- */
+
+const TIPOS_HITO = {
+  clima: { etiqueta: 'Clima', simbolo: 'circle' },
+  territorio: { etiqueta: 'Territorio', simbolo: 'triangle-up' },
+  ley: { etiqueta: 'Ley', simbolo: 'square' }
+};
+
+const HITOS = [
+  {
+    anio: 1982, tipo: 'clima', titulo: 'El Niño 1982–83',
+    texto: 'Uno de los eventos El Niño más intensos del siglo XX. En Chile central, El Niño suele asociarse a inviernos más lluviosos de lo normal.',
+    cuidado: 'No todos los El Niño traen más lluvia, y no toda la lluvia extra de esos años se explica por El Niño.'
+  },
+  {
+    anio: 1997, tipo: 'clima', titulo: 'El Niño 1997–98',
+    texto: 'Otro El Niño muy intenso. 1997 fue un año especialmente lluvioso en la zona central.',
+    cuidado: 'Un año muy lluvioso puede inclinar una tendencia. Por eso usamos la pendiente de Sen, que es resistente a años extremos.'
+  },
+  {
+    anio: 1998, tipo: 'clima', titulo: 'La Niña 1998–2000',
+    texto: 'Tras El Niño llegó La Niña, que en Chile central se asocia a inviernos más secos. 1998 fue un año muy seco.',
+    cuidado: 'Pasar de un año muy húmedo a uno muy seco muestra cuánto varía la lluvia de un año a otro, independiente de cualquier tendencia.'
+  },
+  {
+    anio: 2010, tipo: 'clima', titulo: 'Comienza la megasequía',
+    texto: 'Desde 2010 la zona central encadena años con lluvias bajo lo normal. El CR2 la describe como una sequía sin precedentes por su duración y extensión.',
+    cuidado: 'Estudios del CR2 atribuyen parte del déficit al cambio climático y parte a la variabilidad natural. Nuestros datos muestran el déficit, no su causa.'
+  },
+  {
+    anio: 2015, tipo: 'clima', titulo: 'El Niño 2015–16',
+    texto: 'Uno de los El Niño más intensos registrados. Aun así, no puso fin a la megasequía.',
+    cuidado: 'Un mismo fenómeno no siempre tiene el mismo efecto: depende de cómo interactúa con otros factores del clima.'
+  },
+  {
+    anio: 2017, tipo: 'territorio', titulo: 'Megaincendios de 2017',
+    texto: 'Entre enero y febrero de 2017 se quemó una superficie récord en la zona centro-sur, con O’Higgins, Maule y Biobío entre las regiones más afectadas.',
+    cuidado: 'La sequía reseca la vegetación y facilita el fuego, pero los incendios también dependen del calor, el viento, el tipo de plantaciones y la acción humana.'
+  },
+  {
+    anio: 2019, tipo: 'clima', titulo: 'Un año extremadamente seco',
+    texto: '2019 fue uno de los años más secos registrados en la zona central.',
+    cuidado: 'Un año extremo cerca del final de la serie también pesa en la tendencia. Míralo junto a los años que lo rodean.'
+  },
+  {
+    anio: 2022, tipo: 'ley', titulo: 'Reforma al Código de Aguas',
+    texto: 'La Ley 21.435 reconoce el agua como bien nacional de uso público y prioriza el consumo humano y el saneamiento.',
+    cuidado: 'Una ley no cambia la lluvia. Lo que podría cambiar es cómo se reparte el agua disponible, y eso no lo medimos aquí.'
+  },
+  {
+    anio: 2022, tipo: 'ley', titulo: 'Ley Marco de Cambio Climático',
+    texto: 'La Ley 21.455 fija la meta de carbono neutralidad para 2050 y exige planes de adaptación, incluidos los recursos hídricos.',
+    cuidado: 'Sus efectos, si los hay, se verían en la gestión del agua y en varios años más, no en la lluvia de 2022.'
+  },
+  {
+    anio: 2024, tipo: 'territorio', titulo: 'Incendios en la región de Valparaíso',
+    texto: 'En febrero de 2024, incendios en Viña del Mar, Quilpué y Villa Alemana se convirtieron en uno de los desastres más mortíferos de la historia reciente de Chile.',
+    cuidado: 'Aquí pesan mucho la expansión urbana hacia los cerros y la cercanía de viviendas a la vegetación, factores que no medimos en este sitio.'
+  }
+];
+
+const contexto = { filtro: 'todos', hitoActivo: null };
+
+function filtroAcepta(hito) {
+  return contexto.filtro === 'todos' || hito.tipo === contexto.filtro;
+}
+
+function seleccionarHito(indice) {
+  contexto.hitoActivo = contexto.hitoActivo === indice ? null : indice;
+  renderizarHitos();
+  renderizarDetalle();
+  actualizarLineaTiempo();
+}
+
+function seleccionarFiltro(tipo) {
+  contexto.filtro = tipo;
+  for (const boton of $$('.hito-filtro')) boton.classList.toggle('is-activo', boton.dataset.tipo === tipo);
+  if (contexto.hitoActivo !== null && !filtroAcepta(HITOS[contexto.hitoActivo])) contexto.hitoActivo = null;
+  renderizarHitos();
+  renderizarDetalle();
+  actualizarLineaTiempo();
+}
+
+function renderizarHitos() {
+  const lista = $('#hitos-lista');
+  const datos = datosDe(estado.zonaActiva, estado.fuente);
+  lista.innerHTML = '';
+
+  for (let i = 0; i < HITOS.length; i++) {
+    const hito = HITOS[i];
+    if (!filtroAcepta(hito)) continue;
+
+    const fuera = !datos || datos.error || hito.anio < datos.stats.anioInicio || hito.anio > datos.stats.anioFin;
+    const item = document.createElement('li');
+    const boton = document.createElement('button');
+    boton.className = 'hito-boton';
+    if (i === contexto.hitoActivo) boton.classList.add('is-activo');
+    if (fuera) {
+      boton.classList.add('is-fuera');
+      boton.title = 'Este año no está en la fuente elegida';
+    }
+    boton.dataset.indice = i;
+    boton.innerHTML =
+      `<span class="hito-anio">${hito.anio}</span>` +
+      `<span class="hito-titulo">${hito.titulo}</span>` +
+      `<span class="hito-tipo"><span class="hito-simbolo simbolo-${hito.tipo}"></span>${TIPOS_HITO[hito.tipo].etiqueta}</span>`;
+    item.appendChild(boton);
+    lista.appendChild(item);
+  }
+}
+
+function renderizarDetalle() {
+  const caja = $('#hito-detalle');
+
+  if (contexto.hitoActivo === null) {
+    caja.innerHTML = '<p class="ctx-sub">Toca un hito de la lista o un símbolo del gráfico para ver de qué se trata y qué muestran los datos ese año.</p>';
+    return;
+  }
+
+  const hito = HITOS[contexto.hitoActivo];
+  const zona = CONFIG.zonas[estado.zonaActiva];
+  const fuente = CONFIG.fuentes[estado.fuente];
+  const datos = datosDe(estado.zonaActiva, estado.fuente);
+
+  let dato = 'No hay datos cargados para esta zona y fuente.';
+  if (datos && !datos.error) {
+    const i = datos.anios.indexOf(hito.anio);
+    if (i >= 0) {
+      const valor = datos.valores[i];
+      const pct = (datos.stats.anomalias[i] / datos.stats.media) * 100;
+      dato = `En ${hito.anio}, según ${fuente.nombre}, cayeron ${formatearNumero(valor, 0)} mm en la ${zona.nombre}: ` +
+             `un ${formatearNumero(Math.abs(pct), 0)}% ${pct >= 0 ? 'sobre' : 'bajo'} su promedio.`;
+    } else {
+      dato = `Esta fuente cubre de ${datos.stats.anioInicio} a ${datos.stats.anioFin}, así que no incluye ${hito.anio}. Prueba con la otra fuente en el panel de arriba.`;
+    }
+  }
+
+  caja.innerHTML =
+    `<p class="hito-detalle-ante"><span class="hito-simbolo simbolo-${hito.tipo}"></span>${hito.anio}, ${TIPOS_HITO[hito.tipo].etiqueta.toLowerCase()}</p>` +
+    `<h4>${hito.titulo}</h4>` +
+    `<p>${hito.texto}</p>` +
+    `<p class="hito-dato">${dato}</p>` +
+    `<p class="hito-cuidado"><strong>Ojo:</strong> ${hito.cuidado}</p>`;
+}
+
+function actualizarLineaTiempo() {
+  const contenedor = $('#grafico-linea-tiempo');
+  const datos = datosDe(estado.zonaActiva, estado.fuente);
+  const zona = CONFIG.zonas[estado.zonaActiva];
+  const fuente = CONFIG.fuentes[estado.fuente];
+  const c = coloresTema();
+
+  if (!datos || datos.error) {
+    $('#ctx-linea-sub').textContent = 'No hay datos disponibles para esta zona y fuente.';
+    Plotly.purge(contenedor);
+    delete contenedor.dataset.clic;
+    return;
+  }
+
+  const s = datos.stats;
+  $('#ctx-linea-sub').textContent =
+    `${zona.nombre}, ${fuente.etiqueta.toLowerCase()} (${s.anioInicio}–${s.anioFin}). Cambia la zona o la fuente en el panel de arriba.`;
+
+  let maximo = 0;
+  for (const v of datos.valores) if (v > maximo) maximo = v;
+
+  const anioActivo = contexto.hitoActivo === null ? null : HITOS[contexto.hitoActivo].anio;
+  const opacidades = [];
+  for (const a of datos.anios) opacidades.push(anioActivo === null || a === anioActivo ? 0.9 : 0.3);
+
+  const shapes = [];
+  const hx = [], hy = [], htexto = [], hindice = [], hsimbolo = [], htamano = [];
+  const conteoPorAnio = {};
+
+  for (let i = 0; i < HITOS.length; i++) {
+    const hito = HITOS[i];
+    if (!filtroAcepta(hito)) continue;
+    if (hito.anio < s.anioInicio || hito.anio > s.anioFin) continue;
+
+    const activo = i === contexto.hitoActivo;
+    const k = conteoPorAnio[hito.anio] || 0;
+    conteoPorAnio[hito.anio] = k + 1;
+
+    shapes.push({
+      type: 'line', x0: hito.anio, x1: hito.anio, yref: 'paper', y0: 0, y1: 1,
+      line: { color: activo ? c.tinta : c.otraFuente, width: activo ? 1.5 : 1, dash: activo ? 'solid' : 'dot' },
+      layer: 'below'
+    });
+    hx.push(hito.anio);
+    hy.push(maximo * (1.1 + 0.09 * k));
+    htexto.push(hito.titulo);
+    hindice.push(i);
+    hsimbolo.push(TIPOS_HITO[hito.tipo].simbolo);
+    htamano.push(activo ? 15 : 11);
+  }
+
+  const trazas = [
+    {
+      type: 'bar',
+      x: datos.anios,
+      y: datos.valores,
+      marker: { color: c[estado.zonaActiva], opacity: opacidades },
+      name: 'Lluvia anual',
+      hovertemplate: '%{x}: %{y:,.0f} mm<extra></extra>'
+    },
+    {
+      type: 'scatter',
+      mode: 'markers',
+      x: hx, y: hy,
+      customdata: hindice,
+      text: htexto,
+      marker: { symbol: hsimbolo, size: htamano, color: c.tinta, line: { color: c.papel, width: 1.5 } },
+      name: 'Hitos',
+      hovertemplate: '%{x}: %{text}<extra></extra>'
+    }
+  ];
+
+  const layout = Object.assign(layoutBase(c), {
+    margin: { l: 56, r: 8, t: 10, b: 32 },
+    xaxis: { showgrid: false, zeroline: false, linecolor: c.linea, ticks: 'outside', tickcolor: c.linea, dtick: 5 },
+    yaxis: { gridcolor: c.linea, range: [0, maximo * 1.35], title: { text: 'mm al año', font: { size: 11 } } },
+    showlegend: false,
+    shapes: shapes,
+    bargap: 0.2
+  });
+
+  Plotly.react(contenedor, trazas, layout, { responsive: true, displayModeBar: false });
+
+  if (!contenedor.dataset.clic) {
+    contenedor.on('plotly_click', evento => {
+      const punto = evento.points[0];
+      if (punto.customdata !== undefined) {
+        seleccionarHito(punto.customdata);
+        return;
+      }
+      for (let i = 0; i < HITOS.length; i++) {
+        if (HITOS[i].anio === punto.x && filtroAcepta(HITOS[i])) {
+          seleccionarHito(i);
+          return;
+        }
+      }
+    });
+    contenedor.dataset.clic = '1';
+  }
+}
+
+function actualizarMapaCalor() {
+  const contenedor = $('#grafico-calor');
+  const c = coloresTema();
+  const ordenZonas = ['sur', 'centro', 'norte'];   // Plotly dibuja de abajo hacia arriba
+
+  const aniosSet = new Set();
+  for (const clave of ordenZonas) {
+    const datos = datosDe(clave, estado.fuente);
+    if (!datos || datos.error) continue;
+    for (const a of datos.anios) aniosSet.add(a);
+  }
+  const anios = Array.from(aniosSet).sort((a, b) => a - b);
+
+  if (anios.length === 0) {
+    Plotly.purge(contenedor);
+    return;
+  }
+
+  const filas = [];
+  const nombres = [];
+  for (const clave of ordenZonas) {
+    const datos = datosDe(clave, estado.fuente);
+    const fila = [];
+    for (const a of anios) {
+      if (!datos || datos.error) { fila.push(null); continue; }
+      const i = datos.anios.indexOf(a);
+      fila.push(i >= 0 ? (datos.stats.anomalias[i] / datos.stats.media) * 100 : null);
+    }
+    filas.push(fila);
+    nombres.push(CONFIG.zonas[clave].nombre.replace('Zona ', ''));
+  }
+
+  const trazas = [{
+    type: 'heatmap',
+    x: anios,
+    y: nombres,
+    z: filas,
+    zmin: -80, zmax: 80, zmid: 0,
+    colorscale: [[0, c.norte], [0.5, c.papel2], [1, c.centro]],
+    xgap: 2, ygap: 2,
+    hovertemplate: '%{y}, %{x}: %{z:+.0f}% respecto de su promedio<extra></extra>',
+    colorbar: {
+      thickness: 10, outlinewidth: 0, len: 0.9,
+      ticksuffix: '%', tickfont: { color: c.suave, size: 10 }
+    }
+  }];
+
+  const layout = Object.assign(layoutBase(c), {
+    margin: { l: 60, r: 8, t: 10, b: 32 },
+    xaxis: { showgrid: false, zeroline: false, ticks: 'outside', tickcolor: c.linea, dtick: 5 },
+    yaxis: { showgrid: false, zeroline: false, tickfont: { color: c.tinta } }
+  });
+
+  Plotly.react(contenedor, trazas, layout, { responsive: true, displayModeBar: false });
+}
+
+function actualizarAntesDespues() {
+  const caja = $('#comparacion-zonas');
+  const ANIO_CORTE = 2010;
+  caja.innerHTML = '';
+  let periodo = null;
+
+  for (const clave of ['norte', 'centro', 'sur']) {
+    const zona = CONFIG.zonas[clave];
+    const datos = datosDe(clave, estado.fuente);
+    if (!datos || datos.error) continue;
+
+    let suma_antes = 0, n_antes = 0, suma_desde = 0, n_desde = 0;
+    for (let i = 0; i < datos.anios.length; i++) {
+      if (datos.anios[i] < ANIO_CORTE) { suma_antes += datos.valores[i]; n_antes++; }
+      else { suma_desde += datos.valores[i]; n_desde++; }
+    }
+    if (n_antes === 0 || n_desde === 0) continue;
+
+    const antes = suma_antes / n_antes;
+    const desde = suma_desde / n_desde;
+    const cambio = ((desde - antes) / antes) * 100;
+    const maximo = Math.max(antes, desde);
+    periodo = { inicio: datos.stats.anioInicio, fin: datos.stats.anioFin };
+
+    const fila = document.createElement('div');
+    fila.className = 'cz-fila';
+    fila.style.setProperty('--z', `var(--${clave})`);
+    fila.innerHTML =
+      `<p class="cz-nombre">${zona.nombre}</p>` +
+      `<div class="cz-barras">` +
+        `<div class="cz-barra"><span class="cz-etiqueta">${datos.stats.anioInicio}–${ANIO_CORTE - 1}</span>` +
+          `<span class="cz-pista"><span class="cz-relleno cz-antes" style="width:${(antes / maximo) * 100}%"></span></span>` +
+          `<span class="cz-valor">${formatearNumero(antes, 0)} mm</span></div>` +
+        `<div class="cz-barra"><span class="cz-etiqueta">${ANIO_CORTE}–${datos.stats.anioFin}</span>` +
+          `<span class="cz-pista"><span class="cz-relleno" style="width:${(desde / maximo) * 100}%"></span></span>` +
+          `<span class="cz-valor">${formatearNumero(desde, 0)} mm</span></div>` +
+      `</div>` +
+      `<p class="cz-cambio">${formatearConSigno(cambio, 0)}%</p>`;
+    caja.appendChild(fila);
+  }
+
+  $('#comparacion-nota').textContent = periodo
+    ? `Comparación descriptiva, sin test estadístico: una diferencia entre dos promedios no basta para hablar de tendencia ni de causa. ` +
+      `Con ${CONFIG.fuentes[estado.fuente].etiqueta.toLowerCase()}, el período anterior va de ${periodo.inicio} a ${ANIO_CORTE - 1}.`
+    : 'No hay datos suficientes para esta comparación.';
+}
+
+function actualizarContexto() {
+  renderizarHitos();
+  renderizarDetalle();
+  actualizarLineaTiempo();
+  actualizarMapaCalor();
+  actualizarAntesDespues();
 }
 
 /* ---------- Cuestionario ---------- */
@@ -577,6 +983,9 @@ function avanzarQuiz() {
 /* ---------- Inicio ---------- */
 
 document.addEventListener('DOMContentLoaded', async () => {
+  aplicarTema(document.documentElement.dataset.tema === 'oscuro' ? 'oscuro' : 'claro');
+  $('#tema-toggle').addEventListener('click', alternarTema);
+
   for (const boton of $$('.franja')) {
     boton.addEventListener('click', () => seleccionarZona(boton.dataset.zona));
   }
@@ -590,6 +999,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       actualizarGrafico();
     });
   }
+  for (const boton of $$('.hito-filtro')) {
+    boton.addEventListener('click', () => seleccionarFiltro(boton.dataset.tipo));
+  }
+  $('#hitos-lista').addEventListener('click', evento => {
+    const boton = evento.target.closest('.hito-boton');
+    if (boton) seleccionarHito(Number(boton.dataset.indice));
+  });
 
   $('#toggle-tendencia').addEventListener('change', e => { estado.mostrarTendencia = e.target.checked; actualizarGrafico(); });
   $('#toggle-media-movil').addEventListener('change', e => { estado.mostrarMediaMovil = e.target.checked; actualizarGrafico(); });
