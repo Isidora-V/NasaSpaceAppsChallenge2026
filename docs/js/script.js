@@ -12,8 +12,8 @@ const CONFIG = {
       color: '#c2652a',
       descripcion: 'Desierto de Atacama y Altiplano. Casi toda la lluvia cae en verano, durante el invierno altiplánico, y cambia muchísimo de un año a otro.',
       archivos: {
-        satelite: '../backend/data/NASA/clean/norte_precipitacion_anual.csv',
-        historico: '../backend/data/NO_NASA/clean/norte_precipitacion_anual.csv'
+        satelite: 'backend/data/NASA/clean/norte_precipitacion_anual.csv',
+        historico: 'backend/data/NO_NASA/clean/norte_precipitacion_anual.csv'
       }
     },
     centro: {
@@ -22,8 +22,8 @@ const CONFIG = {
       color: '#2c6e8f',
       descripcion: 'Clima mediterráneo, con lluvias concentradas en invierno. Aquí vive la mayor parte de la población y es donde más se ha sentido la megasequía desde 2010.',
       archivos: {
-        satelite: '../backend/data/NASA/clean/centro_precipitacion_anual.csv',
-        historico: '../backend/data/NO_NASA/clean/centro_precipitacion_anual.csv'
+        satelite: 'backend/data/NASA/clean/centro_precipitacion_anual.csv',
+        historico: 'backend/data/NO_NASA/clean/centro_precipitacion_anual.csv'
       }
     },
     sur: {
@@ -32,8 +32,8 @@ const CONFIG = {
       color: '#3f7a4c',
       descripcion: 'Clima templado y lluvioso. Es la zona más húmeda del país, así que incluso cambios grandes en milímetros pesan poco en porcentaje.',
       archivos: {
-        satelite: '../backend/data/NASA/clean/sur_precipitacion_anual.csv',
-        historico: '../backend/data/NO_NASA/clean/sur_precipitacion_anual.csv'
+        satelite: 'backend/data/NASA/clean/sur_precipitacion_anual.csv',
+        historico: 'backend/data/NO_NASA/clean/sur_precipitacion_anual.csv'
       }
     }
   },
