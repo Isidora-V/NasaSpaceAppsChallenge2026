@@ -21,7 +21,7 @@ NasaSpaceAppsChallenge2026/
 ## Databases (Sources)
 
 - **NASA Giovanni** (GES DISC), main source: [Area-averaged daily precipitation from **GPM IMERG V07** (Late Run, `GPM_3IMERGDL_07`), 1998–2025.](https://giovanni.gsfc.nasa.gov/giovanni/)
-- **Historical record** (non-NASA), complementary source: [Annual precipitation per macro-zone, 1970–2025. [COMPLETAR: origin of the data (e.g., CR2 stations or product), and how it was averaged]](https://www.cr2.cl/)
+- **Historical record CR2** (non-NASA), complementary source: [Annual precipitation per macro-zone, CR2, 1970–2025.](https://www.cr2.cl/)
 
 ## Methodology
 
