@@ -97,8 +97,10 @@ button { font: inherit; color: inherit; }
     var(--c-norte) 0 33.4%,
     var(--c-centro) 33.4% 50.8%,
     var(--c-sur) 50.8% 100%);
-  -webkit-mask: url('../../assets/chile.webp') center / 100% 100% no-repeat;
-          mask: url('../../assets/chile.webp') center / 100% 100% no-repeat;
+    background-image: url('../assets/chile.webp');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .franjas { position: absolute; inset: 0; }
