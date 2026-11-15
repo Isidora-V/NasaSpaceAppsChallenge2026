@@ -20,8 +20,8 @@ NasaSpaceAppsChallenge2026/
 
 ## Databases (Sources)
 
-- **NASA Giovanni** (GES DISC), main source: Area-averaged daily precipitation from **GPM IMERG V07** (Late Run, `GPM_3IMERGDL_07`), 1998–2025.
-- **Historical record** (non-NASA), complementary source: Annual precipitation per macro-zone, 1970–2025. [COMPLETAR: origin of the data (e.g., CR2 stations or product), and how it was averaged]
+- **NASA Giovanni** (GES DISC), main source: [Area-averaged daily precipitation from **GPM IMERG V07** (Late Run, `GPM_3IMERGDL_07`), 1998–2025.](https://giovanni.gsfc.nasa.gov/giovanni/)
+- **Historical record** (non-NASA), complementary source: [Annual precipitation per macro-zone, 1970–2025. [COMPLETAR: origin of the data (e.g., CR2 stations or product), and how it was averaged]](https://www.cr2.cl/)
 
 ## Methodology
 
@@ -82,6 +82,10 @@ Or if you wish to recreate or work directly with the project:
 Each main folder (`backend/` and `frontend/`) includes its own documentation with further details.
 
 The published site is served from `docs/`, which is generated automatically. After any change, run `python actualizar_docs.py` before pushing. Do not edit files inside `docs/` directly.
+
+## AI declaration
+
+Artificial intelligence tools (Claude, Gemini) were used as a supporting assistant during project development, specifically for code debugging, understanding the NASA database, and deployment tasks. The core concept of the website, the project architecture (including the design of the backend, frontend, and data-preparation scripts), as well as the design of the questionnaires, the statistical tools, and the data analysis and visualizations, are entirely our original work. AI was used strictly for technical implementation support and debugging.
 
 ## Team Members
 
