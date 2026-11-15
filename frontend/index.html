@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¿Llueve menos en Chile? | NASA Space Apps 2026</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="cabecera">
+    <div class="contenedor cabecera-fila">
+      <a href="#" class="marca">Lluvia en Chile <span>Space Apps 2026</span></a>
+      <nav class="nav">
+        <a href="#explorador">Mapa</a>
+        <a href="#contexto">Contexto</a>
+        <a href="#cuestionario">Cuestionario</a>
+        <a href="#equipo">Equipo</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="portada">
+      <div class="contenedor">
+        <p class="antetitulo">Desafío NASA: Be an Earth System Trend Detective!</p>
+        <h1>¿Está lloviendo <em>menos</em> en Chile?</h1>
+        <p class="bajada">
+          Medimos la lluvia de Arica a Magallanes con satélites de la NASA desde 1998, y la comparamos con un registro histórico que llega hasta 1970.
+          Elige una zona en el mapa y mira qué dicen los datos, y también lo que todavía no alcanzan a decir.
+        </p>
+      </div>
+    </section>
+
+    <section id="explorador" class="explorador">
+      <div class="contenedor explorador-grilla">
+
+        <div class="mapa" id="mapa" data-activa="centro">
+          <div class="mapa-chile" aria-hidden="true">
+            <div class="silueta"></div>
+          </div>
+          <div class="franjas">
+            <button class="franja franja-norte" data-zona="norte" aria-pressed="false">
+              <span class="franja-nombre">Norte</span>
+              <span class="franja-lat">18°–31° S</span>
+            </button>
+            <button class="franja franja-centro is-activa" data-zona="centro" aria-pressed="true">
+              <span class="franja-nombre">Centro</span>
+              <span class="franja-lat">31°–38° S</span>
+            </button>
+            <button class="franja franja-sur" data-zona="sur" aria-pressed="false">
+              <span class="franja-nombre">Sur</span>
+              <span class="franja-lat">39°–53° S</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <p class="panel-ante" id="zona-lat">Macrozona</p>
+          <h2 id="zona-titulo">Zona Centro</h2>
+          <p id="zona-desc" class="zona-desc"></p>
+
+          <div class="fuentes" role="group" aria-label="Fuente de datos">
+            <span>Fuente:</span>
+            <button class="fuente is-activa" data-fuente="satelite">Satélite NASA, 1998–2025</button>
+            <button class="fuente" data-fuente="historico">Registro histórico, 1970–2025</button>
+          </div>
+
+          <div class="cifras">
+            <div class="cifra">
+              <span class="cifra-valor" id="m-media">—</span>
+              <span class="cifra-etiqueta">mm al año, en promedio</span>
+            </div>
+            <div class="cifra">
+              <span class="cifra-valor" id="m-sen">—</span>
+              <span class="cifra-etiqueta">mm por década (pendiente de Sen)</span>
+            </div>
+            <div class="cifra">
+              <span class="cifra-valor" id="m-cambio">—</span>
+              <span class="cifra-etiqueta">cambio de la tendencia entre el primer y el último año</span>
+            </div>
+            <div class="cifra">
+              <span class="cifra-valor" id="m-mk">—</span>
+              <span class="cifra-etiqueta" id="m-mk-texto">test de Mann-Kendall</span>
+            </div>
+          </div>
+
+          <p class="lectura" id="lectura">Cargando datos…</p>
+
+          <div class="grafico-cabecera">
+            <h3 id="grafico-titulo">Lluvia anual</h3>
+            <div class="vistas">
+              <button class="vista is-activa" data-vista="serie">Año a año</button>
+              <button class="vista" data-vista="anomalias">Anomalías</button>
+            </div>
+          </div>
+
+          <div class="opciones-grafico">
+            <label><input type="checkbox" id="toggle-tendencia" checked> Tendencia</label>
+            <label><input type="checkbox" id="toggle-media-movil" checked> Media móvil de 5 años</label>
+            <label><input type="checkbox" id="toggle-comparar"> Comparar con la otra fuente</label>
+          </div>
+
+          <div class="grafico-caja">
+            <div id="grafico"></div>
+            <div id="grafico-loader" class="cargando">Cargando datos…</div>
+          </div>
+
+          <p class="nota-metodo">
+            Fuente principal: GPM IMERG V07 de la NASA (Late Run, diario), promediado sobre cada zona con NASA Giovanni y sumado por año (1998–2025).
+            Complemento: registro histórico anual por macrozona (1970–2025). Las dos fuentes se analizan por separado y no se empalman.
+            La tendencia es la pendiente de Sen y la significancia, el test de Mann-Kendall con la corrección de Hamed y Rao por autocorrelación.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="contexto" class="seccion">
+      <div class="contenedor">
+        <h2 class="seccion-titulo">Lo que el gráfico no muestra</h2>
+        <p class="seccion-bajada">
+          Una tendencia en la lluvia no explica por sí sola lo que pasa en el territorio.
+          Estos tres factores se cruzan con ella. No los medimos en este sitio, así que los presentamos como contexto y no como causa.
+        </p>
+        <div class="contexto-lista">
+          <article>
+            <h3>Megasequía e incendios</h3>
+            <p>El déficit de lluvia en la zona central desde 2010, documentado por el CR2, reseca la vegetación y aumenta el riesgo y la severidad de los incendios forestales.</p>
+          </article>
+          <article>
+            <h3>Ciudad y suelo</h3>
+            <p>La expansión urbana hacia zonas periurbanas aumenta la demanda de agua y sella suelos que antes dejaban infiltrar la lluvia hacia los acuíferos.</p>
+          </article>
+          <article>
+            <h3>Uso productivo del agua</h3>
+            <p>La agricultura, la minería y otras actividades presionan cuencas que ya reciben menos agua, y eso pesa sobre el acceso de las comunidades.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="cuestionario" class="seccion seccion-alt">
+      <div class="contenedor">
+        <h2 class="seccion-titulo">Pon a prueba lo que viste</h2>
+        <div class="quiz">
+          <p class="quiz-progreso" id="quiz-progreso"></p>
+          <h3 class="quiz-pregunta" id="quiz-pregunta"></h3>
+          <div class="quiz-opciones" id="quiz-opciones"></div>
+          <p class="quiz-feedback" id="quiz-feedback" hidden></p>
+          <button class="boton" id="quiz-siguiente" hidden>Siguiente pregunta</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="equipo" class="seccion">
+      <div class="contenedor">
+        <h2 class="seccion-titulo">Equipo</h2>
+        <ul class="equipo">
+          <li><strong>Nombre Apellido</strong><span>Rol en el proyecto</span></li>
+          <li><strong>Nombre Apellido</strong><span>Rol en el proyecto</span></li>
+          <li><strong>Nombre Apellido</strong><span>Rol en el proyecto</span></li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor pie-fila">
+      <p>Hecho para NASA Space Apps Challenge 2026.</p>
+      <p>
+        Fuentes:
+        <a href="https://giovanni.gsfc.nasa.gov/giovanni/" target="_blank" rel="noopener">NASA Giovanni</a>,
+        <a href="https://gpm.nasa.gov/data/imerg" target="_blank" rel="noopener">GPM IMERG</a>,
+        <a href="https://www.cr2.cl/" target="_blank" rel="noopener">CR2</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
