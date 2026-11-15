@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¿Llueve menos en Chile? | NASA Space Apps 2026</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script>
+    (function () {
+      var tema = null;
+      try { tema = localStorage.getItem('lluvia-chile-tema'); } catch (e) {}
+      if (!tema) {
+        tema = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+      }
+      document.documentElement.dataset.tema = tema;
+    })();
+  </script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="cabecera">
+    <div class="contenedor cabecera-fila">
+      <a href="#" class="marca">Lluvia en Chile <span>Space Apps 2026</span></a>
+      <div class="cabecera-acciones">
+        <nav class="nav">
+          <a href="#explorador">Mapa</a>
+          <a href="#contexto">Contexto</a>
+          <a href="#cuestionario">Cuestionario</a>
+          <a href="#equipo">Equipo</a>
+        </nav>
+        <button class="tema-toggle" id="tema-toggle" type="button" aria-pressed="false" aria-label="Cambiar a modo oscuro">
+          <span class="tema-icono" aria-hidden="true"></span>
+          <span class="tema-texto">Modo oscuro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="portada">
+      <div class="contenedor">
+        <p class="antetitulo">Desafío NASA: Be an Earth System Trend Detective!</p>
+        <h1>¿Está lloviendo <em>menos</em> en Chile?</h1>
+        <p class="bajada">
+          Medimos la lluvia de Arica a Magallanes con satélites de la NASA desde 1998, y la comparamos con un registro histórico que llega hasta 1970.
+          Elige una zona en el mapa y mira qué dicen los datos, y también lo que todavía no alcanzan a decir.
+        </p>
+      </div>
+    </section>
+
+    <section id="explorador" class="explorador">
+      <div class="contenedor explorador-grilla">
+
+        <div class="mapa" id="mapa" data-activa="centro">
+          <div class="mapa-chile" aria-hidden="true">
+            <div class="silueta"></div>
+          </div>
+          <div class="franjas">
+            <button class="franja franja-norte" data-zona="norte" aria-pressed="false">
+              <span class="franja-nombre">Norte</span>
+              <span class="franja-lat">18°–31° S</span>
+            </button>
+            <button class="franja franja-centro is-activa" data-zona="centro" aria-pressed="true">
+              <span class="franja-nombre">Centro</span>
+              <span class="franja-lat">31°–38° S</span>
+            </button>
+            <button class="franja franja-sur" data-zona="sur" aria-pressed="false">
+              <span class="franja-nombre">Sur</span>
+              <span class="franja-lat">39°–53° S</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <p class="panel-ante" id="zona-lat">Macrozona</p>
+          <h2 id="zona-titulo">Zona Centro</h2>
+          <p id="zona-desc" class="zona-desc"></p>
+
+          <div class="fuentes" role="group" aria-label="Fuente de datos">
+            <span>Fuente:</span>
+            <button class="fuente is-activa" data-fuente="satelite">Satélite NASA, 1998–2025</button>
+            <button class="fuente" data-fuente="historico">Registro histórico, 1970–2025</button>
+          </div>
+
+          <div class="cifras">
+            <div class="cifra">
+              <span class="cifra-valor" id="m-media">—</span>
+              <span class="cifra-etiqueta">mm al año, en promedio</span>
+            </div>
+            <div class="cifra">
+              <span class="cifra-valor" id="m-sen">—</span>
+              <span class="cifra-etiqueta">mm por década (pendiente de Sen)</span>
+            </div>
+            <div class="cifra">
+              <span class="cifra-valor" id="m-cambio">—</span>
+              <span class="cifra-etiqueta">cambio de la tendencia entre el primer y el último año</span>
+            </div>
+            <div class="cifra">
+              <span class="cifra-valor" id="m-mk">—</span>
+              <span class="cifra-etiqueta" id="m-mk-texto">test de Mann-Kendall</span>
+            </div>
+          </div>
+
+          <p class="lectura" id="lectura">Cargando datos…</p>
+
+          <div class="grafico-cabecera">
+            <h3 id="grafico-titulo">Lluvia anual</h3>
+            <div class="vistas">
+              <button class="vista is-activa" data-vista="serie">Año a año</button>
+              <button class="vista" data-vista="anomalias">Anomalías</button>
+            </div>
+          </div>
+
+          <div class="opciones-grafico">
+            <label><input type="checkbox" id="toggle-tendencia" checked> Tendencia</label>
+            <label><input type="checkbox" id="toggle-media-movil" checked> Media móvil de 5 años</label>
+            <label><input type="checkbox" id="toggle-comparar"> Comparar con la otra fuente</label>
+          </div>
+
+          <div class="grafico-caja">
+            <div id="grafico"></div>
+            <div id="grafico-loader" class="cargando">Cargando datos…</div>
+          </div>
+
+          <p class="nota-metodo">
+            Fuente principal: GPM IMERG V07 de la NASA (Late Run, diario), promediado sobre cada zona con NASA Giovanni y sumado por año (1998–2025).
+            Complemento: registro histórico anual por macrozona (1970–2025). Las dos fuentes se analizan por separado y no se empalman.
+            La tendencia es la pendiente de Sen y la significancia, el test de Mann-Kendall con la corrección de Hamed y Rao por autocorrelación.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="contexto" class="seccion">
+      <div class="contenedor">
+        <h2 class="seccion-titulo">Lo que el gráfico no muestra</h2>
+        <p class="seccion-bajada">
+          La lluvia no cambia sola ni actúa sola. Aquí la ponemos al lado de fenómenos climáticos, eventos y leyes conocidas para entender mejor el contexto.
+          Todo usa la zona y la fuente que elegiste en el panel de arriba.
+        </p>
+
+        <div class="aviso-causalidad">
+          <p class="aviso-titulo">Correlación no implica causalidad</p>
+          <p>
+            Que dos cosas pasen al mismo tiempo no prueba que una cause la otra. Un año seco y un gran incendio pueden coincidir,
+            pero el fuego también depende del calor, el viento, la vegetación y la acción humana. Esta sección muestra coincidencias para hacer mejores preguntas, no para dar respuestas.
+          </p>
+        </div>
+
+        <div class="ctx-bloque">
+          <h3>Lluvia e hitos en el tiempo</h3>
+          <p class="ctx-sub" id="ctx-linea-sub">Cargando…</p>
+
+          <div class="hitos-filtros" role="group" aria-label="Tipo de hito">
+            <button class="hito-filtro is-activo" data-tipo="todos">Todos</button>
+            <button class="hito-filtro" data-tipo="clima"><span class="hito-simbolo simbolo-clima"></span>Clima</button>
+            <button class="hito-filtro" data-tipo="territorio"><span class="hito-simbolo simbolo-territorio"></span>Territorio</button>
+            <button class="hito-filtro" data-tipo="ley"><span class="hito-simbolo simbolo-ley"></span>Leyes</button>
+          </div>
+
+          <div id="grafico-linea-tiempo" class="ctx-grafico"></div>
+          <div class="hito-detalle" id="hito-detalle"></div>
+          <ol class="hitos-lista" id="hitos-lista"></ol>
+        </div>
+
+        <div class="ctx-bloque">
+          <h3>Mapa de calor: años secos y húmedos</h3>
+          <p class="ctx-sub">
+            Cada celda compara un año con el promedio de su propia zona. Los tonos cálidos son años más secos y los azules, más lluviosos.
+            Sirve para ver si los años secos se repiten en las tres zonas a la vez o solo en algunas.
+          </p>
+          <div id="grafico-calor" class="ctx-grafico ctx-grafico-bajo"></div>
+        </div>
+
+        <div class="ctx-bloque">
+          <h3>¿Cambió algo desde 2010?</h3>
+          <p class="ctx-sub">
+            Promedio de lluvia anual antes de 2010 y desde 2010, el año en que comenzó la megasequía en la zona central.
+          </p>
+          <div class="comparacion-zonas" id="comparacion-zonas"></div>
+          <p class="ctx-nota" id="comparacion-nota"></p>
+        </div>
+
+        <div class="ctx-bloque">
+          <h3>Trabajo futuro</h3>
+          <p class="ctx-sub">
+            Análisis que no alcanzamos a hacer en la hackatón, pero que permitirían pasar del contexto a preguntas más precisas.
+          </p>
+          <div class="futuro-grilla">
+            <article>
+              <h4>Incendios forestales</h4>
+              <p>Cruzar la superficie quemada por temporada, según CONAF, con la lluvia del invierno anterior en cada región.</p>
+            </article>
+            <article>
+              <h4>Legislación ambiental</h4>
+              <p>Estudiar si la reforma al Código de Aguas y la Ley Marco de Cambio Climático cambian cómo se reparte el agua en cuencas con déficit.</p>
+            </article>
+            <article>
+              <h4>Expansión urbana</h4>
+              <p>Medir con imágenes satelitales cuánto suelo se ha construido en zonas periurbanas y compararlo con la recarga de los acuíferos.</p>
+            </article>
+            <article>
+              <h4>Fenómenos de gran escala</h4>
+              <p>Incorporar índices de El Niño y de la Oscilación Decadal del Pacífico para separar la variación natural de la tendencia.</p>
+            </article>
+            <article>
+              <h4>Agua disponible</h4>
+              <p>Sumar caudales de ríos y nieve en la cordillera, que dependen de la lluvia pero también de la temperatura.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cuestionario" class="seccion seccion-alt">
+      <div class="contenedor">
+        <h2 class="seccion-titulo">Pon a prueba lo que viste</h2>
+        <div class="quiz">
+          <p class="quiz-progreso" id="quiz-progreso"></p>
+          <h3 class="quiz-pregunta" id="quiz-pregunta"></h3>
+          <div class="quiz-opciones" id="quiz-opciones"></div>
+          <p class="quiz-feedback" id="quiz-feedback" hidden></p>
+          <button class="boton" id="quiz-siguiente" hidden>Siguiente pregunta</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="equipo" class="seccion">
+      <div class="contenedor">
+        <h2 class="seccion-titulo">Equipo</h2>
+        <ul class="equipo">
+          <li><strong>Fernanda Bobadilla</strong><span>Análisis, limpieza y procesamiento de datos</span></li>
+          <li><strong>Isidora Mora</strong><span>Diseño, desarrollo web y visualización</span></li>
+          <li><strong>Isidora Vargas</strong><span>Desarrollo web y visualización</span></li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor pie-fila">
+      <p>Hecho para NASA Space Apps Challenge 2026.</p>
+      <p>
+        Fuentes:
+        <a href="https://giovanni.gsfc.nasa.gov/giovanni/" target="_blank" rel="noopener">NASA Giovanni</a>,
+        <a href="https://gpm.nasa.gov/data/imerg" target="_blank" rel="noopener">GPM IMERG</a>,
+        <a href="https://www.cr2.cl/" target="_blank" rel="noopener">CR2</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

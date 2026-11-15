@@ -17,4 +17,4 @@ This folder stores the precipitation time series used by the project, separated 
 
 The data was collected from the following websites:
 - https://giovanni.gsfc.nasa.gov/giovanni/
-- [COMPLETAR: website of the historical record]
+- https://www.cr2.cl/
