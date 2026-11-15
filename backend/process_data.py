@@ -1,3 +1,6 @@
+# Script backend de procesamiento encargado de la lectura, filtrado, validación de cobertura mínima 
+# y conversión de los archivos CSV en bruto (tanto de fuentes NASA GPM IMERG como series 
+# históricas NO_NASA) hacia un formato estructurado y limpio para la web.
 from pathlib import Path
 import pandas as pd
 
@@ -21,7 +24,7 @@ def nombre_zona(nombre_archivo):
     raise ValueError(f"El archivo {nombre_archivo} debe empezar con norte, centro o sur")
 
 
-# ---------- NASA (GPM IMERG diario, desde Giovanni) ----------
+# NASA (GPM IMERG diario, desde Giovanni)
 
 def encontrar_inicio_tabla(ruta):
     with open(ruta, "r", encoding="utf-8", errors="ignore") as archivo:
@@ -63,7 +66,7 @@ def procesar_archivo_nasa(ruta):
     return pd.DataFrame(filas)
 
 
-# ---------- NO_NASA (serie anual histórica, ya en mm/año) ----------
+# NO_NASA (serie anual histórica, ya en mm/año)
 
 def procesar_archivo_no_nasa(ruta):
     df = pd.read_csv(ruta)
@@ -84,7 +87,7 @@ def procesar_archivo_no_nasa(ruta):
     return df[["anio", "precipitacion_anual_mm"]].sort_values("anio")
 
 
-# ---------- Ejecución ----------
+# Ejecución
 
 def procesar_carpeta(carpeta_raw, carpeta_clean, funcion, etiqueta):
     archivos = sorted(carpeta_raw.glob("*.csv"))
